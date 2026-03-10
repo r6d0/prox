@@ -1,0 +1,15 @@
+ {
+  "port": 9999,
+  "protocol": "HTTP",
+  "request": {
+    "timeout": "2s",
+    "forwardedHeader": true
+  },
+  "tls": {
+    "certFile": "CertFile",
+    "keyFile": "KeyFile"
+  },
+  "log": {
+    "level": "INFO"
+  }
+ }

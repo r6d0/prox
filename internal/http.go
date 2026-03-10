@@ -63,7 +63,7 @@ func (prox *HttpProx) handle(wrt http.ResponseWriter, req *http.Request) (int, e
 		removeHopByHopHeaders(req.Header)
 
 		config := prox.config
-		if config.Request.ForwardedHeader {
+		if config.Request.Forwarded {
 			req.Header.Add(XForwardedForHeader, req.RemoteAddr)
 		}
 
@@ -92,7 +92,8 @@ func (prox *HttpProx) handleHttpConnect(wrt http.ResponseWriter, req *http.Reque
 	}
 
 	var target net.Conn
-	if target, err = net.DialTimeout(tcpProtocol, host, prox.config.Request.Timeout); err == nil {
+	timeout := time.Duration(prox.config.Request.Timeout)
+	if target, err = net.DialTimeout(tcpProtocol, host, timeout); err == nil {
 		defer target.Close()
 
 		if hjr, ok := wrt.(http.Hijacker); !ok {
@@ -125,7 +126,7 @@ func NewProxHttp(config *ProxConfig) (Prox, error) {
 	port := strconv.FormatUint(uint64(config.Port), digitBase)
 	addr := net.JoinHostPort(localhost, port)
 	prox.server = &http.Server{Addr: addr, Handler: prox}
-	prox.client = &http.Client{Timeout: config.Request.Timeout}
+	prox.client = &http.Client{Timeout: time.Duration(config.Request.Timeout)}
 
 	prox.logger.Info("Prox listens at [", addr, "].")
 	return prox, nil
