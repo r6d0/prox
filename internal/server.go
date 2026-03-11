@@ -1,5 +1,6 @@
 package internal
 
+const portSeparator = ":"
 const tcpProtocol = "tcp"
 const digitBase = 10
 const localhost = "127.0.0.1"

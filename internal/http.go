@@ -119,11 +119,10 @@ func NewProxHttp(config *ProxConfig) (Prox, error) {
 	prox := &HttpProx{config: config, logger: NewLoggerWrapper(config)}
 
 	port := strconv.FormatUint(uint64(config.Port), digitBase)
-	addr := net.JoinHostPort(localhost, port)
-	prox.server = &http.Server{Addr: addr, Handler: prox}
+	prox.server = &http.Server{Addr: portSeparator + port, Handler: prox}
 	prox.client = &http.Client{Timeout: time.Duration(config.Request.Timeout)}
 
-	prox.logger.Info("Prox listens at [", addr, "].")
+	prox.logger.Info("Prox listens at [", port, "].")
 	return prox, nil
 }
 
