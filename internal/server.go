@@ -15,12 +15,5 @@ type Prox interface {
 
 // The function creates a new instance of the proxy server.
 func NewProx(config *ProxConfig) (Prox, error) {
-	switch config.Protocol {
-	case HTTP:
-		return NewProxHttp(config)
-	case HTTPS:
-		return NewProxHttp(config)
-	default:
-		return nil, ErrUnsupportedProtocol
-	}
+	return NewProxHttp(config)
 }

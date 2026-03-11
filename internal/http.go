@@ -33,12 +33,7 @@ type HttpProx struct {
 }
 
 func (prox *HttpProx) Start() error {
-	if prox.config.Protocol == HTTP {
-		return prox.server.ListenAndServe()
-	} else {
-		tls := prox.config.Tls
-		return prox.server.ListenAndServeTLS(tls.CertFile, tls.KeyFile)
-	}
+	return prox.server.ListenAndServe()
 }
 
 func (prox *HttpProx) Stop() error {
