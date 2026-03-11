@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"os"
 	"os/signal"
 	prox "prox/internal"
@@ -16,17 +15,15 @@ func main() {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 
-	path := prox.DEFAULT_JSON_CONFIG
 	if len(os.Args) > 1 {
-		path = os.Args[1]
+		if _, checkErr := os.Stat(os.Args[1]); checkErr == nil {
+			config, err = prox.NewJsonConfig(os.Args[1])
+		}
 	}
 
-	if _, err = os.Stat(path); errors.Is(err, os.ErrNotExist) {
+	if err == nil && config == nil {
 		logger.Info("The configuration was not found. Prox will use the default configuration.")
-		err = nil
 		config = prox.NewDefaultConfig()
-	} else if err == nil {
-		config, err = prox.NewJsonConfig(path)
 	}
 
 	var server prox.Prox

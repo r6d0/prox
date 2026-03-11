@@ -8,7 +8,6 @@ import (
 )
 
 const DEFAULT_PROX_PORT = 9999
-const DEFAULT_JSON_CONFIG = "./proxconfig.json"
 
 // The alias of time.Duration
 type Timeout time.Duration
