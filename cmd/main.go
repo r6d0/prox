@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log/slog"
 	"os"
 	"os/signal"
 	prox "prox/internal"
@@ -8,8 +9,6 @@ import (
 )
 
 func main() {
-	logger := prox.NewLoggerWrapper(nil)
-
 	var err error
 	var config *prox.ProxConfig
 	stop := make(chan os.Signal, 1)
@@ -22,7 +21,7 @@ func main() {
 	}
 
 	if err == nil && config == nil {
-		logger.Info("The configuration was not found. Prox will use the default configuration.")
+		slog.Info("The configuration was not found. Prox will use the default configuration.")
 		config = prox.NewDefaultConfig()
 	}
 
@@ -34,7 +33,7 @@ func main() {
 	}
 
 	if err == nil {
-		logger.Info("Prox is running successfully.")
+		slog.Info("Prox is running successfully.")
 
 		stop := make(chan os.Signal, 1)
 		signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
@@ -46,6 +45,6 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	} else {
-		logger.Info("Proxy was successfully stopped.")
+		slog.Info("Proxy was successfully stopped.")
 	}
 }

@@ -2,6 +2,7 @@ package internal
 
 import (
 	"encoding/json"
+	"log/slog"
 	"os"
 	"strings"
 	"time"
@@ -36,7 +37,7 @@ type HttpRequestProxConfig struct {
 
 // The logger configuration.
 type LogProxConfig struct {
-	Level LogLevel `json:"level"`
+	Level slog.Level `json:"level"`
 }
 
 // The function reads the configuration from a JSON file.
@@ -57,6 +58,6 @@ func NewDefaultConfig() *ProxConfig {
 			Timeout:   Timeout(2 * time.Second),
 			Forwarded: false,
 		},
-		Log: LogProxConfig{Level: INFO},
+		Log: LogProxConfig{Level: slog.LevelDebug},
 	}
 }
