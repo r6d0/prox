@@ -52,21 +52,21 @@ type LoggerWrapper struct {
 
 // The function prints a message when the level is ERROR.
 func (wrp *LoggerWrapper) Error(values ...any) {
-	if wrp.Level <= ERROR {
+	if wrp.Level >= ERROR {
 		wrp.Logger.Println(values...)
 	}
 }
 
 // The function prints a message when the level is INFO.
 func (wrp *LoggerWrapper) Info(values ...any) {
-	if wrp.Level <= INFO {
+	if wrp.Level >= INFO {
 		wrp.Logger.Println(values...)
 	}
 }
 
 // The function prints a message when the level is DEBUG.
 func (wrp *LoggerWrapper) Debug(values ...any) {
-	if wrp.Level <= DEBUG {
+	if wrp.Level >= DEBUG {
 		wrp.Logger.Println(values...)
 	}
 }

@@ -57,5 +57,6 @@ func NewDefaultConfig() *ProxConfig {
 			Timeout:   Timeout(2 * time.Second),
 			Forwarded: false,
 		},
+		Log: LogProxConfig{Level: INFO},
 	}
 }
