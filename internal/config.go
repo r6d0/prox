@@ -10,14 +10,22 @@ import (
 
 const DEFAULT_PROX_PORT = 9999
 
-// The alias of time.Duration
-type Timeout time.Duration
+// The target for logs data.
+type LogTargetType uint8
 
-func (tmt *Timeout) UnmarshalJSON(data []byte) error {
+const (
+	CONSOLE LogTargetType = iota
+	FILE
+)
+
+// The alias of time.Duration
+type TimeDuration time.Duration
+
+func (tmt *TimeDuration) UnmarshalJSON(data []byte) error {
 	text := strings.ReplaceAll(string(data), "\"", "")
 	duration, err := time.ParseDuration(text)
 	if err == nil {
-		*tmt = Timeout(duration)
+		*tmt = TimeDuration(duration)
 	}
 	return err
 }
@@ -31,13 +39,22 @@ type ProxConfig struct {
 
 // The configuration of HTTP requests.
 type HttpRequestProxConfig struct {
-	Timeout   Timeout `json:"timeout"`
-	Forwarded bool    `json:"forwardedHeader"`
+	Timeout   TimeDuration `json:"timeout"`
+	Forwarded bool         `json:"forwardedHeader"`
 }
 
 // The logger configuration.
 type LogProxConfig struct {
-	Level slog.Level `json:"level"`
+	Level  slog.Level        `json:"level"`
+	Target []LogTargetType   `json:"target"`
+	File   LogFileProxConfig `json:"file"`
+}
+
+// The configuration of the log files.
+type LogFileProxConfig struct {
+	Dir        string       `json:"dir"`
+	Size       int64        `json:"size"`
+	TimeToLive TimeDuration `json:"timeToLive"`
 }
 
 // The function reads the configuration from a JSON file.
@@ -55,7 +72,7 @@ func NewDefaultConfig() *ProxConfig {
 	return &ProxConfig{
 		Port: DEFAULT_PROX_PORT,
 		Request: HttpRequestProxConfig{
-			Timeout:   Timeout(2 * time.Second),
+			Timeout:   TimeDuration(2 * time.Second),
 			Forwarded: false,
 		},
 		Log: LogProxConfig{Level: slog.LevelDebug},

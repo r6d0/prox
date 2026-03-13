@@ -25,7 +25,7 @@ func main() {
 		config = prox.NewDefaultConfig()
 	}
 
-	var server prox.Prox
+	var server *prox.Prox
 	if err == nil {
 		if server, err = prox.NewProx(config); err == nil {
 			go server.Start()
