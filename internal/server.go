@@ -98,6 +98,8 @@ func (prox *Prox) handle(wrt http.ResponseWriter, req *http.Request) (int, error
 }
 
 func (prox *Prox) handleHttpConnect(wrt http.ResponseWriter, req *http.Request) (int, error) {
+	defer req.Body.Close()
+
 	status := http.StatusBadGateway
 	host := req.Host
 
