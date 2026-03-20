@@ -76,7 +76,7 @@ func (prox *Prox) handle(wrt http.ResponseWriter, req *http.Request) (int, error
 	if req.Method == http.MethodConnect {
 		return prox.handleHttpConnect(wrt, req)
 	} else {
-		if !strings.HasPrefix(req.RequestURI, "http") || !strings.HasPrefix(req.RequestURI, "https") {
+		if !strings.HasPrefix(req.RequestURI, "http") && !strings.HasPrefix(req.RequestURI, "https") {
 			wrt.WriteHeader(http.StatusBadRequest)
 			return http.StatusBadRequest, errors.New("unsupported protocol")
 		}
