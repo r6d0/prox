@@ -158,6 +158,6 @@ func removeHopByHopHeaders(headers http.Header) {
 }
 
 func createLogger(config *ProxConfig) *slog.Logger {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: config.Log.Level}))
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: config.Log.Level, AddSource: true}))
 	return logger
 }
