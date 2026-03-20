@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"errors"
 	"io"
 	"log/slog"
 	"maps"
@@ -9,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -31,8 +33,13 @@ var hopByHopHeaders = []string{
 	"Upgrade",
 }
 
+type poolItem struct {
+	Data []byte
+}
+
 // HTTP proxy server.
 type Prox struct {
+	pool   *sync.Pool
 	client *http.Client
 	server *http.Server
 	config *ProxConfig
@@ -48,6 +55,8 @@ func (prox *Prox) Stop() error {
 }
 
 func (prox *Prox) ServeHTTP(wrt http.ResponseWriter, req *http.Request) {
+	defer req.Body.Close()
+
 	uri := req.RequestURI
 	start := time.Now()
 	status, err := prox.handle(wrt, req)
@@ -67,7 +76,10 @@ func (prox *Prox) handle(wrt http.ResponseWriter, req *http.Request) (int, error
 	if req.Method == http.MethodConnect {
 		return prox.handleHttpConnect(wrt, req)
 	} else {
-		defer req.Body.Close()
+		if !strings.HasPrefix(req.RequestURI, "http") || !strings.HasPrefix(req.RequestURI, "https") {
+			wrt.WriteHeader(http.StatusBadRequest)
+			return http.StatusBadRequest, errors.New("unsupported protocol")
+		}
 
 		req.RequestURI = ""
 		removeHopByHopHeaders(req.Header)
@@ -80,15 +92,16 @@ func (prox *Prox) handle(wrt http.ResponseWriter, req *http.Request) (int, error
 		status := http.StatusInternalServerError
 		res, err := prox.client.Do(req)
 		if res != nil {
-			defer res.Body.Close()
-
 			removeHopByHopHeaders(res.Header)
 
 			status = res.StatusCode
 			wrt.WriteHeader(status)
 
+			// Copy all headers.
 			maps.Copy(wrt.Header(), res.Header)
-			io.Copy(wrt, res.Body)
+
+			// Copy request data.
+			prox.copyBytes(req.Body, wrt)
 		} else {
 			wrt.WriteHeader(status)
 			prox.logger.Error(err.Error())
@@ -98,8 +111,6 @@ func (prox *Prox) handle(wrt http.ResponseWriter, req *http.Request) (int, error
 }
 
 func (prox *Prox) handleHttpConnect(wrt http.ResponseWriter, req *http.Request) (int, error) {
-	defer req.Body.Close()
-
 	status := http.StatusBadGateway
 	host := req.Host
 
@@ -128,12 +139,26 @@ func (prox *Prox) handleHttpConnect(wrt http.ResponseWriter, req *http.Request) 
 			group := sync.WaitGroup{}
 			group.Add(2) // 2 is goroutines count.
 
-			go func() { defer group.Done(); io.Copy(target, source) }()
-			go func() { defer group.Done(); io.Copy(source, target) }()
+			go func() { defer group.Done(); prox.copyBytes(target, source) }()
+			go func() { defer group.Done(); prox.copyBytes(source, target) }()
 			group.Wait()
 		}
 	}
 	return status, err
+}
+
+func (prox *Prox) copyBytes(from io.Reader, to io.Writer) {
+	item := prox.pool.Get().(*poolItem)
+	buffer := item.Data
+	for true {
+		if read, err := from.Read(buffer); read > 0 && err == nil {
+			to.Write(buffer[0:read])
+		} else {
+			break
+		}
+	}
+	item.Data = buffer[:0]
+	prox.pool.Put(item)
 }
 
 // The function creates new instance of HTTP proxy server.
@@ -141,6 +166,13 @@ func NewProx(config *ProxConfig) (*Prox, error) {
 	server := &Prox{
 		config: config,
 		logger: createLogger(config),
+		pool: &sync.Pool{
+			New: func() any {
+				return &poolItem{
+					Data: make([]byte, config.Request.BufferSize),
+				}
+			},
+		},
 	}
 
 	port := strconv.FormatUint(uint64(config.Port), digitBase)

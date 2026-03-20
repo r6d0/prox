@@ -39,8 +39,9 @@ type ProxConfig struct {
 
 // The configuration of HTTP requests.
 type HttpRequestProxConfig struct {
-	Timeout   TimeDuration `json:"timeout"`
-	Forwarded bool         `json:"forwardedHeader"`
+	Timeout    TimeDuration `json:"timeout"`
+	BufferSize int          `json:"bufferSize"`
+	Forwarded  bool         `json:"forwardedHeader"`
 }
 
 // The logger configuration.
@@ -72,8 +73,9 @@ func NewDefaultConfig() *ProxConfig {
 	return &ProxConfig{
 		Port: DEFAULT_PROX_PORT,
 		Request: HttpRequestProxConfig{
-			Timeout:   TimeDuration(2 * time.Second),
-			Forwarded: false,
+			Timeout:    TimeDuration(2 * time.Second),
+			BufferSize: 2048,
+			Forwarded:  false,
 		},
 		Log: LogProxConfig{Level: slog.LevelDebug},
 	}
