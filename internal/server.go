@@ -53,8 +53,6 @@ func (prox *Prox) Stop() error {
 }
 
 func (prox *Prox) ServeHTTP(wrt http.ResponseWriter, req *http.Request) {
-	defer req.Body.Close()
-
 	uri := req.RequestURI
 	start := time.Now()
 	status, err := prox.handle(wrt, req)
@@ -74,6 +72,8 @@ func (prox *Prox) handle(wrt http.ResponseWriter, req *http.Request) (int, error
 	if req.Method == http.MethodConnect {
 		return prox.handleHttpConnect(wrt, req)
 	} else {
+		defer req.Body.Close()
+
 		req.RequestURI = ""
 		removeHopByHopHeaders(req.Header)
 
@@ -85,6 +85,8 @@ func (prox *Prox) handle(wrt http.ResponseWriter, req *http.Request) (int, error
 		status := http.StatusInternalServerError
 		res, err := prox.client.Do(req)
 		if res != nil {
+			defer res.Body.Close()
+
 			removeHopByHopHeaders(res.Header)
 
 			status = res.StatusCode
@@ -104,6 +106,8 @@ func (prox *Prox) handle(wrt http.ResponseWriter, req *http.Request) (int, error
 }
 
 func (prox *Prox) handleHttpConnect(wrt http.ResponseWriter, req *http.Request) (int, error) {
+	defer req.Body.Close()
+
 	status := http.StatusBadGateway
 	host := req.Host
 
