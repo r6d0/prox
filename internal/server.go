@@ -148,9 +148,9 @@ func (prox *Prox) copyBytes(from io.Reader, to io.Writer) {
 	item := prox.pool.Get().(*poolItem)
 	buffer := item.Data
 	for true {
-		if read, err := from.Read(buffer); read > 0 && err == nil {
+		if read, err := from.Read(buffer); read > 0 {
 			to.Write(buffer[0:read])
-		} else {
+		} else if read <= 0 || err != nil {
 			break
 		}
 	}
