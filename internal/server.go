@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -19,6 +20,7 @@ const digitBase = 10
 const localhost = "127.0.0.1"
 const httpsPort = "443"
 const XForwardedForHeader = "X-Forwarded-For"
+const IGNORE_URI = "/"
 
 var hopByHopHeaders = []string{
 	"Connection",
@@ -54,18 +56,20 @@ func (prox *Prox) Stop() error {
 
 func (prox *Prox) ServeHTTP(wrt http.ResponseWriter, req *http.Request) {
 	uri := req.RequestURI
-	start := time.Now()
-	status, err := prox.handle(wrt, req)
+	if !strings.HasPrefix(uri, IGNORE_URI) {
+		start := time.Now()
+		status, err := prox.handle(wrt, req)
 
-	prox.logger.Debug(
-		"",
-		"method", req.Method,
-		"from", req.RemoteAddr,
-		"to", uri,
-		"status", status,
-		"time", time.Since(start).Microseconds(),
-		"err", err,
-	)
+		prox.logger.Debug(
+			"",
+			"method", req.Method,
+			"from", req.RemoteAddr,
+			"to", uri,
+			"status", status,
+			"duration", time.Since(start).Microseconds(),
+			"err", err,
+		)
+	}
 }
 
 func (prox *Prox) handle(wrt http.ResponseWriter, req *http.Request) (int, error) {
