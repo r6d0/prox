@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"prox/internal/rule"
 	"strconv"
 	"strings"
 	"sync"
@@ -39,6 +40,7 @@ type poolItem struct {
 
 // HTTP proxy server.
 type Prox struct {
+	rules  []rule.Rule
 	pool   *sync.Pool
 	client *http.Client
 	server *http.Server
@@ -57,16 +59,47 @@ func (prox *Prox) Stop() error {
 func (prox *Prox) ServeHTTP(wrt http.ResponseWriter, req *http.Request) {
 	uri := req.RequestURI
 	if !strings.HasPrefix(uri, IGNORE_URI) {
+		prox.logger.Debug(
+			"request_begin",
+			"method", req.Method,
+			"from", req.RemoteAddr,
+			"to", uri,
+		)
+
+		// The rules checking.
+		if len(prox.rules) > 0 {
+			for _, rule := range prox.rules {
+				if ok, code := rule.CheckHTTP(req); !ok {
+					prox.logger.Debug(
+						"request_not_allowed",
+						"method", req.Method,
+						"from", req.RemoteAddr,
+						"to", uri,
+						"code", code,
+					)
+
+					wrt.WriteHeader(code)
+					return
+				}
+			}
+			prox.logger.Debug(
+				"request_allowed",
+				"method", req.Method,
+				"from", req.RemoteAddr,
+				"to", uri,
+			)
+		}
+
 		start := time.Now()
 		status, err := prox.handle(wrt, req)
 
 		prox.logger.Debug(
-			"",
+			"request_complete",
 			"method", req.Method,
 			"from", req.RemoteAddr,
 			"to", uri,
 			"status", status,
-			"duration", time.Since(start).Microseconds(),
+			"duration", time.Since(start).String(),
 			"err", err,
 		)
 	}
@@ -164,24 +197,29 @@ func (prox *Prox) copyBytes(from io.Reader, to io.Writer) {
 
 // The function creates new instance of HTTP proxy server.
 func NewProx(config *ProxConfig) (*Prox, error) {
-	server := &Prox{
-		config: config,
-		logger: createLogger(config),
-		pool: &sync.Pool{
-			New: func() any {
-				return &poolItem{
-					Data: make([]byte, config.Request.BufferSize),
-				}
+	rules, err := rule.NewRules(&config.Request.Rules)
+	if err == nil {
+		server := &Prox{
+			rules:  rules,
+			config: config,
+			logger: createLogger(config),
+			pool: &sync.Pool{
+				New: func() any {
+					return &poolItem{
+						Data: make([]byte, config.Request.BufferSize),
+					}
+				},
 			},
-		},
+		}
+
+		port := strconv.FormatUint(uint64(config.Port), digitBase)
+		server.server = &http.Server{Addr: portSeparator + port, Handler: server}
+		server.client = &http.Client{Timeout: time.Duration(config.Request.Timeout)}
+
+		server.logger.Info("Prox listens at", "port", port)
+		return server, nil
 	}
-
-	port := strconv.FormatUint(uint64(config.Port), digitBase)
-	server.server = &http.Server{Addr: portSeparator + port, Handler: server}
-	server.client = &http.Client{Timeout: time.Duration(config.Request.Timeout)}
-
-	server.logger.Info("Prox listens at", "port", port)
-	return server, nil
+	return nil, err
 }
 
 func removeHopByHopHeaders(headers http.Header) {
