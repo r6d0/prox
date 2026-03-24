@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"os"
+	"prox/internal/rule"
 	"strings"
 	"time"
 )
@@ -39,9 +40,10 @@ type ProxConfig struct {
 
 // The configuration of HTTP requests.
 type HttpRequestProxConfig struct {
-	Timeout    TimeDuration `json:"timeout"`
-	BufferSize int          `json:"bufferSize"`
-	Forwarded  bool         `json:"forwardedHeader"`
+	Rules      rule.RequestRulesConfig `json:"rules"`
+	Timeout    TimeDuration            `json:"timeout"`
+	BufferSize int                     `json:"bufferSize"`
+	Forwarded  bool                    `json:"forwardedHeader"`
 }
 
 // The logger configuration.
