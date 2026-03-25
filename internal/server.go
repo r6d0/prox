@@ -168,24 +168,44 @@ func (prox *Prox) handleHttpConnect(wrt http.ResponseWriter, req *http.Request) 
 			var source net.Conn
 			if source, _, err = hjr.Hijack(); source != nil {
 				defer source.Close()
+
+				if err == nil {
+					group := sync.WaitGroup{}
+					group.Add(2) // 2 is goroutines count.
+
+					go func() {
+						defer group.Done()
+
+						var copyErr error
+						for copyErr == nil || copyErr == io.EOF {
+							_, copyErr = prox.copyBytes(target, source)
+						}
+					}()
+
+					go func() {
+						defer group.Done()
+
+						var copyErr error
+						for copyErr == nil || copyErr == io.EOF {
+							_, copyErr = prox.copyBytes(source, target)
+						}
+					}()
+					group.Wait()
+				}
 			}
-
-			group := sync.WaitGroup{}
-			group.Add(2) // 2 is goroutines count.
-
-			go func() { defer group.Done(); prox.copyBytes(target, source) }()
-			go func() { defer group.Done(); prox.copyBytes(source, target) }()
-			group.Wait()
 		}
 	}
 	return status, err
 }
 
-func (prox *Prox) copyBytes(from io.Reader, to io.Writer) {
+func (prox *Prox) copyBytes(from io.Reader, to io.Writer) (int, error) {
+	var read int
+	var err error
+
 	item := prox.pool.Get().(*poolItem)
 	buffer := item.Data
 	for true {
-		if read, err := from.Read(buffer); read > 0 {
+		if read, err = from.Read(buffer); read > 0 {
 			to.Write(buffer[0:read])
 		} else if read <= 0 || err != nil {
 			break
@@ -193,6 +213,8 @@ func (prox *Prox) copyBytes(from io.Reader, to io.Writer) {
 	}
 	item.Data = buffer[:0]
 	prox.pool.Put(item)
+
+	return read, err
 }
 
 // The function creates new instance of HTTP proxy server.
