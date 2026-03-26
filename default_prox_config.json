@@ -2,7 +2,6 @@
   "port": 9999,
   "request": {
     "timeout": "2s",
-    "bufferSize": 2048,
     "forwardedHeader": false,
     "rules": {
       "fromAddr": ["regexp(.*)"]

@@ -41,7 +41,6 @@ type poolItem struct {
 // HTTP proxy server.
 type Prox struct {
 	rules  []rule.Rule
-	pool   *sync.Pool
 	client *http.Client
 	server *http.Server
 	config *ProxConfig
@@ -198,23 +197,8 @@ func (prox *Prox) handleHttpConnect(wrt http.ResponseWriter, req *http.Request) 
 	return status, err
 }
 
-func (prox *Prox) copyBytes(from io.Reader, to io.Writer) (int, error) {
-	var read int
-	var err error
-
-	item := prox.pool.Get().(*poolItem)
-	buffer := item.Data
-	for true {
-		if read, err = from.Read(buffer); read > 0 {
-			to.Write(buffer[0:read])
-		} else if read <= 0 || err != nil {
-			break
-		}
-	}
-	item.Data = buffer[:0]
-	prox.pool.Put(item)
-
-	return read, err
+func (prox *Prox) copyBytes(from io.Reader, to io.Writer) (int64, error) {
+	return io.Copy(to, from)
 }
 
 // The function creates new instance of HTTP proxy server.
@@ -225,13 +209,6 @@ func NewProx(config *ProxConfig) (*Prox, error) {
 			rules:  rules,
 			config: config,
 			logger: createLogger(config),
-			pool: &sync.Pool{
-				New: func() any {
-					return &poolItem{
-						Data: make([]byte, config.Request.BufferSize),
-					}
-				},
-			},
 		}
 
 		port := strconv.FormatUint(uint64(config.Port), digitBase)

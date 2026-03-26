@@ -37,7 +37,6 @@ JSON configuration is given below:
   "port": 9999,
   "request": {
     "timeout": "2s",
-    "bufferSize": 2048,
     "forwardedHeader": false,
     "rules": {
       "fromAddr": ["regexp(.*)"]
@@ -56,7 +55,6 @@ JSON configuration is given below:
 | [port](#port) | The server port. It should be from 0 to 65535. The default value is 9999. |
 | [request.timeout](#requesttimeout) | The request timeout. It has `time.Duration` syntax. The default value is 2 seconds. |
 | [request.forwardedHeader](#requestforwardedheader) | If the value is true, Prox will add the `X-Forwarded-For` header. The default value is false. |
-| [request.bufferSize](#requestbuffersize) | The buffer size for copying request data. The default value is 2048 bytes (2KB). |
 | [request.rules.fromAddr](#requestrulesfromaddr) | The rule for checking the client's address by expressions and blocking the request if necessary. |
 | [log.level](#loglevel) | The logger level. It should be INFO, ERROR or DEBUG. The default value is INFO. |
 
@@ -84,16 +82,6 @@ The request timeout. It has `time.Duration` syntax. The default value is 2 secon
 {  
   "request": {
     "forwardedHeader": false
-  }
-}
-```
-
- #### request.bufferSize
- The buffer size for copying request data. The default value is 2048 bytes (2KB).
-```json
-{
-  "request": {
-    "bufferSize": 2048
   }
 }
 ```
