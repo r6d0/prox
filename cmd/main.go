@@ -2,6 +2,8 @@ package main
 
 import (
 	"log/slog"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	prox "prox/internal"
@@ -9,6 +11,10 @@ import (
 )
 
 func main() {
+	go func() {
+		http.ListenAndServe("localhost:6060", nil)
+	}()
+
 	var err error
 	var config *prox.ProxConfig
 	stop := make(chan os.Signal, 1)

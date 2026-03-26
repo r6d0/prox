@@ -34,12 +34,13 @@ var hopByHopHeaders = []string{
 	"Upgrade",
 }
 
-type poolItem struct {
-	Data []byte
+type copyBuffer struct {
+	data []byte
 }
 
 // HTTP proxy server.
 type Prox struct {
+	pool   *sync.Pool
 	rules  []rule.Rule
 	client *http.Client
 	server *http.Server
@@ -174,20 +175,12 @@ func (prox *Prox) handleHttpConnect(wrt http.ResponseWriter, req *http.Request) 
 
 					go func() {
 						defer group.Done()
-
-						var copyErr error
-						for copyErr == nil || copyErr == io.EOF {
-							_, copyErr = prox.copyBytes(target, source)
-						}
+						prox.copyBytes(target, source)
 					}()
 
 					go func() {
 						defer group.Done()
-
-						var copyErr error
-						for copyErr == nil || copyErr == io.EOF {
-							_, copyErr = prox.copyBytes(source, target)
-						}
+						prox.copyBytes(source, target)
 					}()
 					group.Wait()
 				}
@@ -197,8 +190,14 @@ func (prox *Prox) handleHttpConnect(wrt http.ResponseWriter, req *http.Request) 
 	return status, err
 }
 
-func (prox *Prox) copyBytes(from io.Reader, to io.Writer) (int64, error) {
-	return io.Copy(to, from)
+func (prox *Prox) copyBytes(from io.Reader, to io.Writer) {
+	read := -1
+	buffer := prox.pool.Get().(*copyBuffer)
+	for read != 0 {
+		read, _ = from.Read(buffer.data)
+		to.Write(buffer.data[:read])
+	}
+	prox.pool.Put(buffer)
 }
 
 // The function creates new instance of HTTP proxy server.
@@ -206,7 +205,12 @@ func NewProx(config *ProxConfig) (*Prox, error) {
 	rules, err := rule.NewRules(&config.Request.Rules)
 	if err == nil {
 		server := &Prox{
-			rules:  rules,
+			rules: rules,
+			pool: &sync.Pool{
+				New: func() any {
+					return &copyBuffer{data: make([]byte, config.Request.BufferSize)}
+				},
+			},
 			config: config,
 			logger: createLogger(config),
 		}

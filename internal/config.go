@@ -40,9 +40,10 @@ type ProxConfig struct {
 
 // The configuration of HTTP requests.
 type HttpRequestProxConfig struct {
-	Rules     rule.RequestRulesConfig `json:"rules"`
-	Timeout   TimeDuration            `json:"timeout"`
-	Forwarded bool                    `json:"forwardedHeader"`
+	Rules      rule.RequestRulesConfig `json:"rules"`
+	BufferSize int                     `json:"bufferSize"`
+	Timeout    TimeDuration            `json:"timeout"`
+	Forwarded  bool                    `json:"forwardedHeader"`
 }
 
 // The logger configuration.
