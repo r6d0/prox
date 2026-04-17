@@ -7,6 +7,7 @@ Prox is a simple and easy-to-use forward proxy server on Go.
  - HTTPS tunneling through CONNECT;
  - JSON configuration;
  - Pure Go and no external dependencies;
+ - Requests filtering rules.
 
  # How to use
  ## Build from source code
