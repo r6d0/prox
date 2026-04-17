@@ -59,7 +59,7 @@ JSON configuration is given below:
 | [request.forwardedHeader](#requestforwardedheader) | If the value is true, Prox will add the `X-Forwarded-For` header. The default value is false. |
 | [request.bufferSize](#requestbuffersize) | The buffer size for copying request data. The default value is 2048 bytes (2KB). |
 | [request.rules.from](#requestrulesfrom) | The rule for checking the client's address by expressions and blocking the request if necessary. |
-| [request.rules.to](#requestrules) | The rule for checking the target host by expressions and blocking the request if necessary. |
+| [request.rules.to](#requestrulesto) | The rule for checking the target host by expressions and blocking the request if necessary. |
 | [log.level](#loglevel) | The logger level. It should be INFO, ERROR or DEBUG. The default value is ERROR. |
 
 #### port
