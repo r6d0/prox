@@ -6,33 +6,33 @@ import (
 	"testing"
 )
 
-func TestNewFromAddrRuleSuccess(t *testing.T) {
+func TestNewToAddrRuleSuccess(t *testing.T) {
 	expression := make(map[string]any)
 	expression["any"] = []any{
 		"127.0.0.1",
 		"(128.*)",
 	}
 
-	_, err := rule.NewFromAddrRule(expression)
+	_, err := rule.NewToAddrRule(expression)
 	if err != nil {
 		t.Fatalf("error should be nil, but error is %v", err)
 	}
 }
 
-func TestNewFromAddrRuleFailure(t *testing.T) {
+func TestNewToAddrRuleFailure(t *testing.T) {
 	expression := make(map[string]any)
 	expression["any"] = nil
 
-	_, err := rule.NewFromAddrRule(expression)
+	_, err := rule.NewToAddrRule(expression)
 	if err == nil {
 		t.Fatal("error should be not nil, but error is nil")
 	}
 }
 
-func TestNewFromAddrRuleCheckHTTPSuccess(t *testing.T) {
-	matcher, _ := rule.NewFromAddrRule("127.0.0.1")
+func TestNewToAddrRuleCheckHTTPSuccess(t *testing.T) {
+	matcher, _ := rule.NewToAddrRule("127.0.0.1")
 
-	ok, code := matcher.CheckHTTP(&http.Request{RemoteAddr: "127.0.0.1"})
+	ok, code := matcher.CheckHTTP(&http.Request{RequestURI: "127.0.0.1"})
 	if !ok {
 		t.Fatal("result should be true")
 	}
@@ -42,10 +42,10 @@ func TestNewFromAddrRuleCheckHTTPSuccess(t *testing.T) {
 	}
 }
 
-func TestNewFromAddrRuleCheckHTTPFailure(t *testing.T) {
-	matcher, _ := rule.NewFromAddrRule("127.0.0.1")
+func TestNewToAddrRuleCheckHTTPFailure(t *testing.T) {
+	matcher, _ := rule.NewToAddrRule("127.0.0.1")
 
-	ok, code := matcher.CheckHTTP(&http.Request{RemoteAddr: "128.0.0.1"})
+	ok, code := matcher.CheckHTTP(&http.Request{RequestURI: "128.0.0.1"})
 	if ok {
 		t.Fatal("result should be false")
 	}

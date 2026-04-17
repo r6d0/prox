@@ -33,38 +33,40 @@ go run ./cmd/main.go ./prox_config.json
 JSON configuration is given below:
 
 ```json
-{
-  "port": 9999,
+ {
+  "port": 1080,
   "request": {
     "timeout": "2s",
     "forwardedHeader": false,
     "bufferSize": 2048,
     "rules": {
-      "fromAddr": ["regexp(.*)"]
+      "from": "(.*)",
+      "to": "(.*)"      
     }
   },
   "log": {
     "level": "ERROR"
   }
-}
+ }
 ```
 
 ### All available configuration properties
 
 | Property | Description |
 | --- | --- |
-| [port](#port) | The server port. It should be from 0 to 65535. The default value is 9999. |
+| [port](#port) | The server port. It should be from 0 to 65535. The default value is 1080. |
 | [request.timeout](#requesttimeout) | The request timeout. It has `time.Duration` syntax. The default value is 2 seconds. |
 | [request.forwardedHeader](#requestforwardedheader) | If the value is true, Prox will add the `X-Forwarded-For` header. The default value is false. |
 | [request.bufferSize](#requestbuffersize) | The buffer size for copying request data. The default value is 2048 bytes (2KB). |
-| [request.rules.fromAddr](#requestrulesfromaddr) | The rule for checking the client's address by expressions and blocking the request if necessary. |
-| [log.level](#loglevel) | The logger level. It should be INFO, ERROR or DEBUG. The default value is INFO. |
+| [request.rules.from](#requestrulesfrom) | The rule for checking the client's address by expressions and blocking the request if necessary. |
+| [request.rules.to](#requestrules) | The rule for checking the target host by expressions and blocking the request if necessary. |
+| [log.level](#loglevel) | The logger level. It should be INFO, ERROR or DEBUG. The default value is ERROR. |
 
 #### port
-The server port. It should be from 0 to 65535. The default value is 9999.
+The server port. It should be from 0 to 65535. The default value is 1080.
 ```json
 {
-  "port": 9999
+  "port": 1080
 }
 ```
 
@@ -78,7 +80,7 @@ The request timeout. It has `time.Duration` syntax. The default value is 2 secon
 }
 ```
 
- #### request.forwardedHeader
+#### request.forwardedHeader
  If the value is true, Prox will add the `X-Forwarded-For` header. The default value is false.
 ```json
 {  
@@ -88,7 +90,7 @@ The request timeout. It has `time.Duration` syntax. The default value is 2 secon
 }
 ```
 
- #### request.bufferSize
+#### request.bufferSize
  The buffer size for copying request data. The default value is 2048 bytes (2KB).
 ```json
 {
@@ -98,17 +100,19 @@ The request timeout. It has `time.Duration` syntax. The default value is 2 secon
 }
 ```
 
- #### request.rules.fromAddr
- The rule for checking the client's address by expressions and blocking the request if necessary. By default, all requests will be allowed.
+#### request.rules.from
+The rule for checking the client's address by expressions and blocking the request if necessary. By default, all requests will be allowed.
 
- Examples:
+Examples:
  
- Only requests from `127.0.0.1` and `127.0.0.1` will be allowed.
+ Only requests from `127.0.0.1` and `128.0.0.1` will be allowed.
 ```json
 {
   "request": {
     "rules": {
-      "fromAddr": ["127.0.0.1", "127.0.0.2"]
+      "from": {
+        "any": ["127.0.0.1", "128.0.0.1"]
+      }
     }
   }
 }
@@ -119,7 +123,7 @@ Only requests from IP addresses that start with `127` will be allowed.
 {
   "request": {
     "rules": {
-      "fromAddr": ["regexp(127.*)"]
+      "from": "(127.*)"
     }
   }
 }
@@ -130,19 +134,63 @@ Requests from `127.0.0.1` and IP addresses that start with `128` will not be all
 {
   "request": {
     "rules": {
-      "fromAddr": ["not(127.0.0.1)", "not(regexp(128.*))"]
+      "from": {
+        "all": ["!127.0.0.1", "!(128.*)"]
+      }
+    }
+  }
+}
+```
+
+#### request.rules.to
+The rule for checking the target host by expressions and blocking the request if necessary. By default, all requests will be allowed.
+
+Examples:
+
+Only requests to `mysuper.site` or `mycool.site` will be allowed.
+```json
+{
+  "request": {
+    "rules": {
+      "to": {
+        "any": ["mysuper.site", "mycool.site"]
+      }
+    }
+  }
+}
+```
+
+Only requests to host that starts with `my` will be allowed.
+```json
+{
+  "request": {
+    "rules": {
+      "to": "(my.*)"
+    }
+  }
+}
+```
+
+Requests to `notsuper.site` and `notcool.site` will not be allowed.
+```json
+{
+  "request": {
+    "rules": {
+      "to": {
+        "all": ["!notsuper.site", "!notcool.site"]
+      }
     }
   }
 }
 ```
 
 #### log.level
-The logger level. It should be INFO, ERROR or DEBUG. The default value is INFO.
+The logger level. It should be INFO, ERROR or DEBUG. The default value is ERROR.
 
 ```json
 {
   "log": {
-    "level": "DEBUG"
+    "level": "ERROR"
   }
 }
 ```

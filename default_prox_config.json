@@ -1,11 +1,12 @@
  {
-  "port": 9999,
+  "port": 1080,
   "request": {
     "timeout": "2s",
     "forwardedHeader": false,
     "bufferSize": 2048,
     "rules": {
-      "fromAddr": ["regexp(.*)"]
+      "from": "(.*)",
+      "to": "(.*)"      
     }
   },
   "log": {

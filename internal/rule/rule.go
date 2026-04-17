@@ -6,7 +6,8 @@ import (
 
 // The rules configuration.
 type RequestRulesConfig struct {
-	FromAddr []string `json:"fromAddr"`
+	From any `json:"from"`
+	To   any `json:"to"`
 }
 
 // The rule for the request checking.
@@ -20,10 +21,16 @@ func NewRules(config *RequestRulesConfig) ([]Rule, error) {
 	var err error
 	rules := []Rule{}
 
-	fromAddr := config.FromAddr
-	if len(fromAddr) > 0 {
+	if config.From != nil {
 		var rule Rule
-		if rule, err = NewFromAddrRule(fromAddr); err == nil {
+		if rule, err = NewFromAddrRule(config.From); err == nil {
+			rules = append(rules, rule)
+		}
+	}
+
+	if config.To != nil {
+		var rule Rule
+		if rule, err = NewToAddrRule(config.To); err == nil {
 			rules = append(rules, rule)
 		}
 	}
