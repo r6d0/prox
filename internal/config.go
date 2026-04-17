@@ -9,15 +9,8 @@ import (
 	"time"
 )
 
-const DEFAULT_PROX_PORT = 9999
-
-// The target for logs data.
-type LogTargetType uint8
-
-const (
-	CONSOLE LogTargetType = iota
-	FILE
-)
+const DEFAULT_PROX_PORT = 1080
+const DEFAULT_BUFFER_SIZE = 2048
 
 // The alias of time.Duration
 type TimeDuration time.Duration
@@ -48,16 +41,7 @@ type HttpRequestProxConfig struct {
 
 // The logger configuration.
 type LogProxConfig struct {
-	Level  slog.Level        `json:"level"`
-	Target []LogTargetType   `json:"target"`
-	File   LogFileProxConfig `json:"file"`
-}
-
-// The configuration of the log files.
-type LogFileProxConfig struct {
-	Dir        string       `json:"dir"`
-	Size       int64        `json:"size"`
-	TimeToLive TimeDuration `json:"timeToLive"`
+	Level slog.Level `json:"level"`
 }
 
 // The function reads the configuration from a JSON file.
@@ -75,9 +59,10 @@ func NewDefaultConfig() *ProxConfig {
 	return &ProxConfig{
 		Port: DEFAULT_PROX_PORT,
 		Request: HttpRequestProxConfig{
-			Timeout:   TimeDuration(2 * time.Second),
-			Forwarded: false,
+			Timeout:    TimeDuration(2 * time.Second),
+			Forwarded:  false,
+			BufferSize: DEFAULT_BUFFER_SIZE,
 		},
-		Log: LogProxConfig{Level: slog.LevelDebug},
+		Log: LogProxConfig{Level: slog.LevelError},
 	}
 }

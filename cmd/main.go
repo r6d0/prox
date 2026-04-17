@@ -45,6 +45,6 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	} else {
-		slog.Info("Proxy was successfully stopped.")
+		slog.Info("Prox was successfully stopped.")
 	}
 }
