@@ -1,3 +1,9 @@
+# Prox
+
+<p align="center">
+  <img src="https://shields.io" alt="Go">
+</p>
+
 # About
 
 Prox is a simple and easy-to-use forward proxy server in Go.
