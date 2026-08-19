@@ -1,6 +1,6 @@
 # About
 
-Prox is a simple and easy-to-use forward proxy server on Go.
+Prox is a simple and easy-to-use forward proxy server in Go.
 
 # Features
  - HTTP forwarding;
