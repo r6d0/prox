@@ -1,6 +1,6 @@
 # Prox
 
-![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/r6d0/prox)
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/r6d0/prox) ![GitHub License](https://img.shields.io/github/license/r6d0/prox)
 
 # About
 
