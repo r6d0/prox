@@ -1,8 +1,6 @@
 # Prox
 
-<p align="center">
-  <img src="https://shields.io" alt="Go">
-</p>
+![Go](https://shields.io)
 
 # About
 
